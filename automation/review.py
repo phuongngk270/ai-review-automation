@@ -47,15 +47,25 @@ def wait_for_review(
 ) -> RunHandle:
     effective_interval = max(poll_interval, 1.0)
     max_attempts = max(1, int(timeout / effective_interval))
-    for _ in range(max_attempts):
+    PENDING_STATES = {"", "RUNNING", "NOT_STARTED", "PENDING", "QUEUED"}
+    triggered = False
+    for attempt in range(max_attempts):
         status = client.post(
             "/api/v3/checkreview/status",
             {"lpId": lp_id, "submissionVersionIndex": version},
         )
         state = status.get("state", "")
-        logger.info("review %s state=%s run=%s", lp_id, state, status.get("latestRunId"))
-        if state and state != "RUNNING":
-            return RunHandle(run_id=status["latestRunId"], state=state)
+        run_id = status.get("latestRunId")
+        logger.info("review %s state=%s run=%s", lp_id, state, run_id)
+        if state not in PENDING_STATES and run_id:
+            return RunHandle(run_id=run_id, state=state)
+        # Auto-trigger fallback: if we sit in NOT_STARTED for >1 poll, kick it off.
+        if not triggered and state == "NOT_STARTED" and attempt >= 1:
+            try:
+                trigger_rerun(client, lp_id=lp_id, version=version)
+                triggered = True
+            except Exception as exc:
+                logger.warning("trigger_rerun failed (continuing to poll): %s", exc)
         time.sleep(poll_interval)
     raise TimeoutError(f"AI review for {lp_id} did not complete within {timeout:.0f}s")
 
