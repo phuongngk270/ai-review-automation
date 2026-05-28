@@ -66,6 +66,17 @@ Script handles every stage except Stage 7. For Stage 7, dump the AI Review resul
 - Is there a single endpoint to fetch all 22 results, or per-check?
 - Google Sheets: confirm OAuth (user creds) vs. service account access to the test-cases sheet.
 
+## Findings During Implementation (Phase 1 Task 3, 2026-05-28)
+
+Running the live smoke test surfaced one important correction to the probe findings:
+
+- **Auth is bearer-based, not cookie-based.** The `/api/v3/...` endpoints require an `Authorization: Bearer <jwt>` header, NOT just session cookies on the request. The relevant JWT is `stargazer_token_v2_fundsub`, which the SPA stores in `localStorage` after a bifrost bootstrap (`id-minas-tirith/api/v3/bifrost-authentication/verify-cookie` → `fundsub/api/v3/bifrost-bootstrap/verifyBootstrapToken`).
+- **Pragmatic auth path for the script:** drive `gstack-browse` to load the dashboard once per script run (the SPA performs the bootstrap), then read the bearer JWT from localStorage via `gstack-browse js localStorage.getItem('stargazer_token_v2_fundsub')`. All subsequent API calls in the run are pure `requests` with the Authorization header — no browser involvement after the bootstrap.
+- **`gstack-browse` deliberately redacts cookie values and `storage` output** (replaces them with `[REDACTED — N chars]` strings whose em dash is not latin-1 encodable). The redaction does NOT apply to `js` eval results, which is why JS-based extraction works.
+- **`browser_cookie3`** can read Chrome's cookies cleanly with Keychain approval, but we no longer need it once we switched to bearer-only auth.
+
+The design's three approaches (A pure-API, B Playwright-for-upload, C LLM-for-results) still stand. We are still on path A; the only change is the auth shim. Phase 2 will likely keep this same gstack-browse bootstrap step.
+
 ## Success Criteria
 
 - Running the script with no arguments completes all 67 remaining combos and writes 67 sets of results to the Google Sheet, with the same outcome the LLM-driven skill would have produced for already-known combos.
