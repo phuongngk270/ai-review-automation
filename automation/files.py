@@ -68,12 +68,21 @@ def upload_file(client: "AnduinClient", path: Path, folder_id: str) -> str:
         "/api/v3/files/completeDirectUpload/async-run",
         {"id": op_id, "params": {"batchUploadId": batch_id}},
     )
-    result = client.post(
-        "/api/v3/files/completeDirectUpload/async-fetch",
-        {"id": op_id},
-    )
-    state = result.get("state") or {}
-    if state.get("__typename__") != "AsyncApiStateSuccess":
-        raise RuntimeError(f"upload async-fetch failed: {state}")
-    files = state["resp"]["r"]["files"]
-    return files[0][0]
+    # Poll async-fetch until state transitions out of Running.
+    import time
+    deadline = time.monotonic() + 60.0
+    while True:
+        result = client.post(
+            "/api/v3/files/completeDirectUpload/async-fetch",
+            {"id": op_id},
+        )
+        state = result.get("state") or {}
+        typename = state.get("__typename__")
+        if typename == "AsyncApiStateSuccess":
+            files = state["resp"]["r"]["files"]
+            return files[0][0]
+        if typename and typename != "AsyncApiStateRunning":
+            raise RuntimeError(f"upload async-fetch failed: {state}")
+        if time.monotonic() > deadline:
+            raise RuntimeError(f"upload async-fetch did not complete within 60s: {state}")
+        time.sleep(1.0)

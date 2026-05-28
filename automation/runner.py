@@ -43,17 +43,29 @@ def run_combo(
     today = today or date.today()
     logger.info("=== %s ===", combo.profile_name)
 
-    create_offline_investor(
-        client,
-        firm_name=combo.profile_name,
-        first_name="Test",
-        last_name=combo.profile_name,
-        email=f"{combo.profile_name.lower()}@example.test",
-        close_id=close_id,
-    )
+    # Idempotency: if an LP with this firm name already exists, reuse it
+    # instead of creating a duplicate. The dashboard returns a list; we pick
+    # the first match.
+    import time
     lp_id = find_lp_by_firm_name(client, combo.profile_name)
     if lp_id is None:
-        raise RuntimeError(f"could not find LP after create: {combo.profile_name}")
+        create_offline_investor(
+            client,
+            firm_name=combo.profile_name,
+            first_name="Test",
+            last_name=combo.profile_name,
+            email=f"{combo.profile_name.lower()}@example.test",
+            close_id=close_id,
+        )
+        # Eventual consistency: the just-created LP may not appear on the
+        # dashboard for a few seconds. Retry with backoff.
+        for attempt in range(10):
+            time.sleep(2.0)
+            lp_id = find_lp_by_firm_name(client, combo.profile_name)
+            if lp_id is not None:
+                break
+        if lp_id is None:
+            raise RuntimeError(f"could not find LP after create: {combo.profile_name}")
 
     if folder_id is None:
         folder_id = _resolve_user_folder_id(client)
