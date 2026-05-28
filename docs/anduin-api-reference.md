@@ -138,6 +138,69 @@ needed by the upload endpoints, list the dashboard with
 
 ---
 
+## 1b. listInvestorsOnDashboard (getAdvancedDashboardData)
+
+Lists all LPs on the GP dashboard. This is the correct endpoint for enumerating investors — **not** `getLpDashboardItemList` (see note below).
+
+- **URL:** `POST /api/v3/admin/dashboard/getAdvancedDashboardData`
+- **Capture date:** 2026-05-28
+
+**Request body:**
+
+```json
+{
+  "fundSubId": "txnqxned8j9qx1yp.fsbkg78",
+  "dashboardIdOpt": "txnqxned8j9qx1yp.fsbkg78.fdieolm",
+  "queryParams": {
+    "filterPresetIdOpt": null,
+    "filters": [],
+    "searchText": "",
+    "sortedBy": "contact",
+    "reversed": false,
+    "pageIndex": 0,
+    "pageSizeOpt": 500
+  },
+  "shouldApplyLatestFilter": true
+}
+```
+
+The `dashboardIdOpt` value (`…fdieolm`) is constant for this fund. It is stored in `automation/config.py` as `DASHBOARD_ID`.
+
+**Response shape (top-level keys):**
+
+```json
+{
+  "dashboardData": {
+    "id": "txnqxned8j9qx1yp.fsbkg78.fdieolm",
+    "total": 17,
+    "totalLps": ["<lpId>", "..."],
+    "rows": [
+      {
+        "rowMetadata": { ... },
+        "cellsData": [ ... ]
+      }
+    ]
+  }
+}
+```
+
+**`rowMetadata` keys used by the script:**
+
+| Key | Type | Notes |
+| --- | --- | --- |
+| `lpId` | string | e.g. `txnqxned8j9qx1yp.fsbkg78.lpp143r6pe` — the LP id needed by all other endpoints |
+| `lpInfo` | object | `{userId, emailStr, firstName, lastName}` |
+| `lpInvestmentEntity` | string | The firm/entity name (what `firmName` is called in the create-investor body) |
+| `status.value` | int | e.g. `9` = some status state; coerce to `str` when storing |
+
+**Mapping note:** The create-investor endpoint (`addMainLpWorkflowWithoutJointInfo`) uses `firmName` in its request body. The list endpoint returns the same value as `lpInvestmentEntity`. The public Python API (`ExistingProfile.firm_name`, `find_lp_by_firm_name`) uses `firm_name` throughout; internal code maps from `lpInvestmentEntity`.
+
+**Clarification on `getLpDashboardItemList`:**
+
+`POST /api/v3/fundsub/admin/getLpDashboardItemList` is a **BATCH-DETAIL** endpoint, not a list endpoint. Its body takes `{"lpIds": ["<lpId>", ...]}` and returns one detail object per id. It returns HTTP 500 when called with `{"fundSubId": ..., "filters": {}, "limit": 500, "offset": 0}` — that shape was assumed in Phase 1 planning but is incorrect.
+
+---
+
 ## 2. uploadSubscriptionDoc
 
 Submits a previously-uploaded subscription PDF as the LP's signed

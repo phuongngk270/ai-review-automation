@@ -7,6 +7,7 @@ from pathlib import Path
 ENTITY_ID = "entd5ev6mge1xndv"
 FUND_SUB_ID = "txnqxned8j9qx1yp.fsbkg78"
 FUND_DELAWARE_AMOUNT_FIELD_ID = "txnqxned8j9qx1yp.fsbkg78.ivfm3r"
+DASHBOARD_ID = "txnqxned8j9qx1yp.fsbkg78.fdieolm"
 
 PROBE_INVESTOR_PREFIX = "PROBE-API-DISCOVERY-DELETE-ME"
 
