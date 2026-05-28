@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 class AnduinClient:
     def __init__(self, bearer: str, base_url: str = "https://fundsub-minas-tirith.anduin.dev") -> None:
+        self._bearer = bearer
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
         self.session.headers.update({
@@ -23,6 +24,10 @@ class AnduinClient:
             "Authorization": f"Bearer {bearer}",
             "User-Agent": "anduin-automation/0.1 (+phase1-smoke)",
         })
+
+    @property
+    def bearer(self) -> str:
+        return self._bearer
 
     def post(self, path: str, json: dict[str, Any] | None = None) -> dict[str, Any]:
         url = f"{self.base_url}{path}"

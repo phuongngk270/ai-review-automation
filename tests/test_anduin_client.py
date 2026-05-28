@@ -23,6 +23,14 @@ def test_post_raises_on_non_2xx():
             client.post("/api/v3/account/get-user-profile", json={})
 
 
+def test_client_bearer_property_strips_prefix():
+    from automation.anduin_client import AnduinClient
+    c = AnduinClient(bearer="abc.def.ghi")
+    assert c.bearer == "abc.def.ghi"
+    # ensure Authorization header was set
+    assert c.session.headers["Authorization"] == "Bearer abc.def.ghi"
+
+
 def test_post_returns_empty_dict_for_blank_response():
     client = AnduinClient(bearer="x.y.z", base_url="https://example.test")
     with patch.object(client.session, "post") as post:
