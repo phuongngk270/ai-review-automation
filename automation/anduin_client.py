@@ -8,20 +8,19 @@ from typing import Any
 
 import requests
 
-from automation.cookies import refresh_and_load
+from automation.auth import bootstrap_bearer
 
 logger = logging.getLogger(__name__)
 
 
 class AnduinClient:
-    def __init__(self, cookies: dict[str, str], base_url: str = "https://fundsub-minas-tirith.anduin.dev") -> None:
+    def __init__(self, bearer: str, base_url: str = "https://fundsub-minas-tirith.anduin.dev") -> None:
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
-        for name, value in cookies.items():
-            self.session.cookies.set(name, value)
         self.session.headers.update({
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "Authorization": f"Bearer {bearer}",
             "User-Agent": "anduin-automation/0.1 (+phase1-smoke)",
         })
 
@@ -38,13 +37,15 @@ class AnduinClient:
 
 
 def smoke() -> int:
-    """Phase 1 acceptance: fetch the logged-in user profile via /api/v3."""
+    """Phase 1 acceptance: bootstrap a bearer JWT and fetch the user profile."""
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    cookies = refresh_and_load()
-    client = AnduinClient(cookies=cookies)
+    bearer = bootstrap_bearer()
+    logger.info("got bearer JWT, len=%d", len(bearer))
+    client = AnduinClient(bearer=bearer)
     profile = client.post("/api/v3/account/get-user-profile", json={})
     print(profile, file=sys.stdout)
-    if "email" in profile or "userId" in profile or "id" in profile:
+    user_info = profile.get("userInfo") or profile
+    if "emailAddressStr" in user_info or "email" in user_info or "userName" in user_info:
         return 0
     print("WARN: profile response did not include an obvious user identifier", file=sys.stderr)
     return 1

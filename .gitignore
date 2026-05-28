@@ -1,5 +1,24 @@
+# macOS
+.DS_Store
+
+# Python
 __pycache__/
 *.pyc
 .venv/
 .pytest_cache/
+
+# Local state / caches
 .cookies-cache.json
+.gstack/
+
+# Test data / large binaries — kept out of version control, distributed separately
+AI Review Agent Test Pack/
+AI_Review_Agent_Test_Cases.xlsx
+*.pdf
+*.xlsx
+
+# Original skill / scratch notes that don't belong in this repo
+SKILL_ai-review-automation_UPDATED.md
+SKILL_ai-review-automation_UPDATED.md.bak
+skills/
+List of checks*.md
