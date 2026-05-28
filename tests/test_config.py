@@ -2,6 +2,7 @@ from pathlib import Path
 
 from automation.config import (
     DASHBOARD_ID,
+    DEFAULT_CLOSE_ID,
     DOC_BASE_DIR,
     DOC_FOLDER_SHORTCUTS,
     ENTITY_ID,
@@ -18,6 +19,7 @@ def test_constants_are_stable():
     assert FUND_DELAWARE_AMOUNT_FIELD_ID == "txnqxned8j9qx1yp.fsbkg78.ivfm3r"
     assert PROBE_INVESTOR_PREFIX == "PROBE-API-DISCOVERY-DELETE-ME"
     assert DASHBOARD_ID == "txnqxned8j9qx1yp.fsbkg78.fdieolm"
+    assert DEFAULT_CLOSE_ID == "txnqxned8j9qx1yp.fsbkg78.fscxy1j64m"
 
 
 def test_resolve_doc_path_uses_shortcuts():

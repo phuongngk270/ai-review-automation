@@ -11,6 +11,8 @@ DASHBOARD_ID = "txnqxned8j9qx1yp.fsbkg78.fdieolm"
 
 PROBE_INVESTOR_PREFIX = "PROBE-API-DISCOVERY-DELETE-ME"
 
+DEFAULT_CLOSE_ID = "txnqxned8j9qx1yp.fsbkg78.fscxy1j64m"
+
 DOC_BASE_DIR = (
     Path(__file__).resolve().parents[1]
     / "AI Review Agent Test Pack"
