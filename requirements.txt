@@ -1,2 +1,4 @@
 requests==2.32.3
 pytest==8.3.3
+google-api-python-client>=2.140
+google-auth-oauthlib>=1.2
