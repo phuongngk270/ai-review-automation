@@ -47,10 +47,19 @@ def _run_one(rest: list[str]) -> int:
     if profile_name not in combos:
         print(f"unknown profile: {profile_name}", file=sys.stderr)
         return 2
+    # Opt out of sheet write with --no-sheet (useful for dry runs).
+    write_sheet = "--no-sheet" not in rest[1:]
+
     client = AnduinClient(bearer=bootstrap_bearer())
     result = run_combo(client, combos[profile_name], close_id=DEFAULT_CLOSE_ID)
     for row in result.outcome_rows:
         print(row)
+    if write_sheet and result.outcome_rows:
+        from automation.sheets import connect, write_outcomes
+        sheet_id = _read_sheet_id_from_env_or_skill_md()
+        svc = connect()
+        write_outcomes(svc, sheet_id=sheet_id, tab_name="Test Cases", rows=result.outcome_rows)
+        print(f"wrote {len(result.outcome_rows)} row(s) to sheet {sheet_id}")
     return 0
 
 
