@@ -1,6 +1,6 @@
 ---
 name: run-test-combo
-description: Run a single AI Review test combo (or several) end-to-end against the live Anduin GP API and write the outcome to the master Google Sheet. Use when asked to "run test combo C##-...", "run a test case", "execute combo XX", or "validate the AI review pipeline on profile YY".
+description: Run a single AI Review test combo end-to-end against the live Anduin GP API and write the outcome to the master Google Sheet. Use when asked to "run test combo C##-...", "run a test case", "run the next testing profile", "run the next combo", "execute combo XX", or "validate the AI review pipeline on profile YY".
 ---
 
 # run-test-combo
@@ -42,7 +42,17 @@ If either fails, STOP and report. Common causes:
 
 ## Execution
 
-The single command:
+Two entry points. Pick based on what the user asked for.
+
+**A. "Run the next test profile" / "run the next combo"** — the runner picks the first un-run combo for you:
+
+```bash
+.venv/bin/python -m automation run-next
+```
+
+Prints `next: C##-TC-XX-YY` then proceeds with the full pipeline. Resumability filter: any combo whose `profile_name` already appears on the dashboard (firmName) is skipped.
+
+**B. "Run combo C##-..."** — the user named a specific one:
 
 ```bash
 .venv/bin/python -m automation run-one <PROFILE_NAME>

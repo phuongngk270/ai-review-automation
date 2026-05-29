@@ -13,7 +13,7 @@ def main(argv: list[str]) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     if len(argv) < 2:
         print(
-            "usage: python -m automation {smoke|list-combos|run-one <profile>|run-all}",
+            "usage: python -m automation {smoke|list-combos|run-one <profile>|run-next|run-all}",
             file=sys.stderr,
         )
         return 2
@@ -28,6 +28,8 @@ def main(argv: list[str]) -> int:
         return 0
     if cmd == "run-one":
         return _run_one(argv[2:])
+    if cmd == "run-next":
+        return _run_next(argv[2:])
     if cmd == "run-all":
         return _run_all()
     print(f"unknown command: {cmd}", file=sys.stderr)
@@ -60,6 +62,22 @@ def _run_one(rest: list[str]) -> int:
         svc = connect()
         write_outcomes(svc, sheet_id=sheet_id, tab_name="Test Cases", rows=result.outcome_rows)
         print(f"wrote {len(result.outcome_rows)} row(s) to sheet {sheet_id}")
+    return 0
+
+
+def _run_next(rest: list[str]) -> int:
+    """Pick the first combo not yet on the dashboard and run it via _run_one."""
+    from automation.combos import load_combos
+    from automation.investor import list_existing_probe_profiles
+
+    client = AnduinClient(bearer=bootstrap_bearer())
+    existing = {p.firm_name for p in list_existing_probe_profiles(client, prefix="C")}
+    for combo in load_combos():
+        if combo.profile_name not in existing:
+            print(f"next: {combo.profile_name}", flush=True)
+            # Delegate to _run_one with the resolved profile + any extra flags
+            return _run_one([combo.profile_name, *rest])
+    print("no combos left to run (all 67 already on the dashboard)", file=sys.stderr)
     return 0
 
 
