@@ -31,7 +31,13 @@ def main(argv: list[str]) -> int:
     if cmd == "run-next":
         return _run_next(argv[2:])
     if cmd == "run-all":
-        return _run_all()
+        count = None
+        for arg in argv[2:]:
+            if arg.startswith("--count="):
+                count = int(arg.split("=", 1)[1])
+            elif arg == "--count" and len(argv) > argv.index(arg) + 1:
+                count = int(argv[argv.index(arg) + 1])
+        return _run_all(count=count)
     print(f"unknown command: {cmd}", file=sys.stderr)
     return 2
 
@@ -81,7 +87,7 @@ def _run_next(rest: list[str]) -> int:
     return 0
 
 
-def _run_all() -> int:
+def _run_all(count: int | None = None) -> int:
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     from automation.combos import load_combos
@@ -98,6 +104,8 @@ def _run_all() -> int:
     client = AnduinClient(bearer=bootstrap_bearer())
     existing = {p.firm_name for p in list_existing_probe_profiles(client, prefix="C")}
     combos = [c for c in load_combos() if c.profile_name not in existing]
+    if count is not None:
+        combos = combos[:count]
     log = logging.getLogger(__name__)
     log.info("running %d combos (skipped %d already-done)", len(combos), 67 - len(combos))
 
