@@ -73,21 +73,20 @@ If anything prints `MISSING`, the test pack is incomplete — ping Phuong.
 
 The runner needs a bearer JWT to talk to the Anduin API. It gets this by reading cookies from your Chrome browser — but it needs **gstack** installed to do that. gstack is an AI dev toolkit; you only need it for the cookie extraction step.
 
-### 3a. Install gstack (one-time)
+### 3a. Locate gstack-browse (no separate install needed)
 
+If you have **Claude Code** installed (the `claude` CLI), gstack-browse is already on your machine — it ships with it. Check:
+
+```bash
+ls ~/.claude/skills/gstack/browse/dist/browse
+# expect: the file exists
+```
+
+If that path doesn't exist, install gstack once:
 ```bash
 curl -fsSL https://install.garryslist.org | bash
+# restart terminal after
 ```
-
-This installs the `gstack` CLI and the headless browse daemon. After install, restart your terminal (or `source ~/.zshrc` / `source ~/.bashrc`).
-
-Verify:
-```bash
-gstack --version
-# expect: a version number like 5.1.0
-```
-
-If `curl` fails or you're on a managed machine, alternative: download the installer from https://garryslist.org/gstack and run it manually, or ask Phuong for the binary.
 
 ### 3b. Start the browse daemon
 
