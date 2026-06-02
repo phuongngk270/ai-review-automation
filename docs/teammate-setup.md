@@ -127,6 +127,20 @@ If smoke fails:
 
 Do NOT proceed to step 4 until smoke passes.
 
+### 3e. Initialize your upload scratch folder (first-time only)
+
+**This step is required the first time you run on a new Anduin account.** The file upload API needs a per-user scratch folder that only gets created after you've uploaded at least one file through the Anduin SPA UI. If you skip this, the runner will fail with a permissions error on `completeDirectUpload`.
+
+Do this once in Chrome on the Anduin dashboard:
+
+1. Find any investor row (e.g. C35-TC-05-FAIL) → hover → **"View details"**
+2. Click **"⋯" → "Access investor's subscription"**
+3. Scroll to **"Sign subscription form"** → click **"Already signed? Upload here"**
+4. Upload any PDF (doesn't matter which) → click **"Upload 1 file"** → wait for it to complete
+5. You can close without submitting — the folder is now initialized
+
+After this one-time step, the Python runner can upload files without any permission errors.
+
 ---
 
 ## 4. Google Sheets OAuth
