@@ -71,30 +71,62 @@ If anything prints `MISSING`, the test pack is incomplete — ping Phuong.
 
 ## 3. Anduin auth via gstack-browse
 
-The runner gets a bearer JWT by reading cookies from a live `gstack-browse` session that's logged into the Anduin SPA.
+The runner needs a bearer JWT to talk to the Anduin API. It gets this by reading cookies from your Chrome browser — but it needs **gstack** installed to do that. gstack is an AI dev toolkit; you only need it for the cookie extraction step.
+
+### 3a. Install gstack (one-time)
 
 ```bash
-# Install gstack if you don't have it (see https://garryslist.org/gstack or ask Phuong)
-# Once installed:
-$B status     # confirms the browse daemon is alive
+curl -fsSL https://install.garryslist.org | bash
 ```
 
-Sign in to Anduin in that browser session, once:
-```bash
-$B goto https://fundsub-minas-tirith.anduin.dev/
-# Browser window opens. Log in with your anduintransact.com SSO.
-# Land on the Magma Capital - AI Agents fund dashboard.
-```
-
-You only need to do this once per machine. The session cookie is long-lived. If you get `401 from /api/...` errors later, re-do `$B goto https://...` and log in again.
+This installs the `gstack` CLI and the headless browse daemon. After install, restart your terminal (or `source ~/.zshrc` / `source ~/.bashrc`).
 
 Verify:
 ```bash
-.venv/bin/python -m automation smoke
-# expect: 200 OK with your profile JSON, exit 0
+gstack --version
+# expect: a version number like 5.1.0
 ```
 
-If smoke fails with anything other than a profile dump, do NOT proceed to step 5 — fix this first.
+If `curl` fails or you're on a managed machine, alternative: download the installer from https://garryslist.org/gstack and run it manually, or ask Phuong for the binary.
+
+### 3b. Start the browse daemon
+
+```bash
+~/.claude/skills/gstack/browse/dist/browse status
+```
+
+If it says `NEEDS_SETUP` instead of `Status: healthy`, run:
+```bash
+cd ~/.claude/skills/gstack && ./setup
+```
+
+This takes ~10 seconds (installs Chromium headless). Only needed once.
+
+### 3c. Log in to Anduin
+
+```bash
+B="$HOME/.claude/skills/gstack/browse/dist/browse"
+$B goto https://fundsub-minas-tirith.anduin.dev/
+```
+
+A browser window opens. Log in with your `@anduintransact.com` Google SSO. Land on the Magma Capital - AI Agents fund dashboard (you should see the investor list).
+
+You only need to do this once per machine. The session cookie is long-lived (~24h). If you get `401` errors later, re-run this command and log in again.
+
+### 3d. Verify auth works end-to-end
+
+```bash
+cd "Testing review agent"
+.venv/bin/python -m automation smoke
+# expect: 200 OK with your profile JSON (firstName, lastName, email), exit 0
+```
+
+If smoke fails:
+- `CalledProcessError` on `cookie-import-browser` → the browse daemon isn't running or you skipped step 3b. Re-run `$B goto https://fundsub-minas-tirith.anduin.dev/`.
+- `401 from /api/...` → cookie imported but the session expired. Log in again via `$B goto ...`.
+- `RuntimeError: no cookies found` → you didn't land on the Anduin dashboard in step 3c. Make sure you're fully logged in and the dashboard is visible before closing the browser window.
+
+Do NOT proceed to step 4 until smoke passes.
 
 ---
 
