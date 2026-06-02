@@ -141,6 +141,8 @@ Do this once in Chrome on the Anduin dashboard:
 
 After this one-time step, the Python runner can upload files without any permission errors.
 
+> **If you still get a permissions error on `completeDirectUpload` after the above:** your Anduin account may not have Write permission to the file storage API. This is a backend permission issue — the SPA UI works because it uses a cross-origin iframe with its own auth context, but the Python runner hits the API directly and needs explicit write access. Ask Phuong to grant your account (`user-XXXX` — find your user id from `python -m automation smoke` output, it's in `userInfo.userName`) Write permission to the file storage API.
+
 ---
 
 ## 4. Google Sheets OAuth
