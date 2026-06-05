@@ -105,11 +105,18 @@ def create_offline_investor(
 
 def _list_dashboard(client: "AnduinClient") -> list[dict]:
     """Return a list of rowMetadata dicts from the advanced dashboard."""
+    # getRecentDashboardId is a required preflight — Anduin added it as a
+    # server-side session initialiser. Returns empty body but must be called first.
+    try:
+        client.post("/api/v3/fundsub/admin/getRecentDashboardId", {"fundSubId": FUND_SUB_ID})
+    except Exception:
+        pass  # non-fatal: proceed with hardcoded DASHBOARD_ID
+    dashboard_id = DASHBOARD_ID
     resp = client.post(
         "/api/v3/admin/dashboard/getAdvancedDashboardData",
         {
             "fundSubId": FUND_SUB_ID,
-            "dashboardIdOpt": DASHBOARD_ID,
+            "dashboardId": dashboard_id,
             "queryParams": {
                 "filterPresetIdOpt": None,
                 "filters": [],
